@@ -1,4 +1,4 @@
-# Demo of Multi-tenant application using Dapper and Postgres with Row level security
+# Demo of a multi-tenant application using Dapper and Postgres with Row level security
 
 ## Configuring security policy
 
