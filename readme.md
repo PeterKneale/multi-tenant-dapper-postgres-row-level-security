@@ -1,1 +1,1 @@
-# MultiTenant Dapper and Grpc
+# Demo of Multi-tenant application using Dapper and Postgres with Row level security
