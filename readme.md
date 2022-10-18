@@ -19,5 +19,9 @@ Execute.Sql($"CREATE POLICY {Policy} ON {Table} FOR ALL TO {Username} USING (cur
 ## Interacting with security policy
 
 ```sql
-SET app.tenant = '{tenant}'
+// The the tenant context for this connection
+SET app.tenant = '{Tenant}'
+
+// Only this rows belonging to this tenant will be returned
+SELECT * FROM {Table}
 ```
