@@ -1,8 +1,7 @@
-﻿using System.Reflection;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Demo.Infrastructure.Repositories;
+namespace Demo.Infrastructure.Repositories.Serialisation;
 
 public class JsonPrivateContractResolver : DefaultContractResolver
 {

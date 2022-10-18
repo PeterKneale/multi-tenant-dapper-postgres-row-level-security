@@ -1,8 +1,4 @@
-﻿using Demo.Domain.CarAggregate;
-using FluentValidation;
-using MediatR;
-
-namespace Demo.Application.Commands;
+﻿namespace Demo.Application.Commands;
 
 public static class RegisterCar
 {
@@ -41,12 +37,15 @@ public static class RegisterCar
             var carId = CarId.CreateInstance(request.Id);
             var registration = Registration.CreateInstance(request.Registration);
 
-            var car = await _cars.GetCar(carId, cancellationToken);
-            if (car == null) throw new Exception("Car not found");
+            var car = await _cars.Get(carId, cancellationToken);
+            if (car == null)
+            {
+                throw new Exception("Car not found");
+            }
 
             car.Register(registration);
 
-            await _cars.UpdateCar(car, cancellationToken);
+            await _cars.Update(car, cancellationToken);
 
             return Unit.Value;
         }

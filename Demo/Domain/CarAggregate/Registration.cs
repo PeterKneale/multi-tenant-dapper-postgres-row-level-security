@@ -13,7 +13,7 @@ public class Registration
     }
 
     // Private setter for serialisation
-    public string RegistrationNumber { get; private set; }
+    public string RegistrationNumber { get; private set; } = null!;
 
     public static Registration CreateInstance(string registrationNumber)
     {

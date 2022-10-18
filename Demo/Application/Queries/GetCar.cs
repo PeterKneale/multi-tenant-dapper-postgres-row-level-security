@@ -1,8 +1,4 @@
-﻿using Demo.Domain.CarAggregate;
-using FluentValidation;
-using MediatR;
-
-namespace Demo.Application.Queries;
+﻿namespace Demo.Application.Queries;
 
 public static class GetCar
 {
@@ -16,7 +12,7 @@ public static class GetCar
         public Guid Id { get; }
     }
 
-    public record Result(Guid Id, Guid? OwnerId, string? Registration);
+    public record Result(Guid Id, string? Registration);
 
     internal class Validator : AbstractValidator<Query>
     {
@@ -39,10 +35,13 @@ public static class GetCar
         {
             var carId = CarId.CreateInstance(request.Id);
 
-            var car = await _cars.GetCar(carId, cancellationToken);
-            if (car == null) throw new Exception("Car not found");
+            var car = await _cars.Get(carId, cancellationToken);
+            if (car == null)
+            {
+                throw new Exception("Car not found");
+            }
 
-            return new Result(car.Id.Id, car.Owner?.Id, car.Registration?.RegistrationNumber);
+            return new Result(car.Id.Id, car.Registration?.RegistrationNumber);
         }
     }
 }

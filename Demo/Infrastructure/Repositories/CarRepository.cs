@@ -1,64 +1,73 @@
-﻿using System.Data;
-using Dapper;
-using Demo.Domain.CarAggregate;
-using Demo.Domain.PersonAggregate;
+﻿using Demo.Infrastructure.Repositories.Serialisation;
 
 namespace Demo.Infrastructure.Repositories;
 
 internal class CarRepository : ICarRepository
 {
-    private readonly IDbConnection _connection;
-    private readonly IJsonSerializer _json;
+    private readonly IRepository _db;
+    private readonly ITenantContext _context;
 
-    public CarRepository(IDbConnection connection, IJsonSerializer json)
+    public CarRepository(IRepository db, ITenantContext context)
     {
-        _connection = connection;
-        _json = json;
+        _db = db;
+        _context = context;
     }
 
-    public async Task<Car?> GetCar(CarId carId, CancellationToken token)
+    public async Task<Car?> Get(CarId carId, CancellationToken cancellationToken)
     {
-        var sql = "select data from cars where id = @id";
-        var parameters = new {id = carId.Id};
-        var result = await _connection.QuerySingleOrDefaultAsync<string>(sql, parameters);
-        if (result == null) return null;
-        return _json.FromJson<Car>(result);
+        const string sql = "select data from cars where id = @id";
+        var result = await _db.QuerySingleOrDefaultAsync(sql, new
+        {
+            id = carId.Id
+        });
+        return JsonHelper.ToObject<Car>(result);
     }
 
-    public async Task SaveCar(Car car, CancellationToken token)
+    public async Task<Car?> GetByRegistration(Registration registration, CancellationToken token)
     {
-        var sql = "insert into cars (id, registration, data) values (@id, @registration, @data::jsonb)";
-        var json = _json.ToJson(car);
-        var parameters = new {id = car.Id.Id, registration = car.Registration?.RegistrationNumber, data = json};
-        await _connection.ExecuteAsync(sql, parameters);
+        const string sql = "select data from cars where registration = @registration";
+        var result = await _db.QuerySingleOrDefaultAsync(sql, new
+        {
+            registration = registration.RegistrationNumber
+        });
+        return JsonHelper.ToObject<Car>(result);
+    }
+    
+    public async Task<IEnumerable<Car>> List(CancellationToken cancellationToken)
+    {
+        const string sql = "select data from cars";
+        var results = await _db.QueryAsync(sql, cancellationToken);
+        return results
+            .Select(result => JsonHelper.ToObject<Car>(result)!)
+            .ToList();
     }
 
-    public async Task UpdateCar(Car car, CancellationToken cancellationToken)
+    public async Task Insert(Car car, CancellationToken cancellationToken)
     {
-        var sql = "update cars set registration = @registration, data = @data::jsonb where id = @id";
-        var json = _json.ToJson(car);
-        var parameters = new {id = car.Id.Id, registration = car.Registration?.RegistrationNumber, data = json};
-        var result = await _connection.ExecuteAsync(sql, parameters);
+        const string sql = "insert into cars (id, tenant, registration, data) values (@id, @tenant, @registration, @data::jsonb)";
+        var json = JsonHelper.ToJson(car);
+        await _db.ExecuteAsync(sql, new
+        {
+            id = car.Id.Id,
+            tenant = _context.CurrentTenant,
+            registration = car.Registration?.RegistrationNumber,
+            data = json
+        });
+    }
+
+    public async Task Update(Car car, CancellationToken cancellationToken)
+    {
+        const string sql = "update cars set registration = @registration, data = @data::jsonb where id = @id";
+        var result = await _db.ExecuteAsync(sql, new
+        {
+            id = car.Id.Id,
+            registration = car.Registration?.RegistrationNumber,
+            data = JsonHelper.ToJson(car)
+        });
         if (result != 1)
         {
             throw new Exception("Record not updated");
         }
     }
 
-    public async Task<Car?> GetByRegistration(Registration registration, CancellationToken token)
-    {
-        var sql = "select data from cars where registration = @registration";
-        var parameters = new {registration = registration.RegistrationNumber};
-        var result = await _connection.QuerySingleOrDefaultAsync<string>(sql, parameters);
-        if (result == null) return null;
-        return _json.FromJson<Car>(result);
-    }
-
-    public async Task<IReadOnlyCollection<Car>> ListByOwner(PersonId ownerId, CancellationToken token)
-    {
-        var sql = "select data from cars where (data -> 'Owner' ->> 'Id')::uuid = @id;";
-        var parameters = new {id = ownerId.Id};
-        var results = await _connection.QueryAsync<string>(sql, parameters);
-        return results.Select(x => _json.FromJson<Car>(x)).ToList();
-    }
 }

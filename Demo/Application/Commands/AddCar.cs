@@ -1,8 +1,4 @@
-﻿using Demo.Domain.CarAggregate;
-using FluentValidation;
-using MediatR;
-
-namespace Demo.Application.Commands;
+﻿namespace Demo.Application.Commands;
 
 public static class AddCar
 {
@@ -39,7 +35,7 @@ public static class AddCar
 
             var car = Car.CreateInstance(carId);
 
-            await _cars.SaveCar(car, cancellationToken);
+            await _cars.Insert(car, cancellationToken);
 
             return Unit.Value;
         }

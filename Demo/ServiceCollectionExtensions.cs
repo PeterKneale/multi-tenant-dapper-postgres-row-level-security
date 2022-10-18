@@ -1,15 +1,4 @@
-﻿using System.Data;
-using System.Reflection;
-using Demo.Domain.CarAggregate;
-using Demo.Domain.PersonAggregate;
-using Demo.Infrastructure.Database;
-using Demo.Infrastructure.Repositories;
-using FluentMigrator.Runner;
-using FluentValidation;
-using MediatR;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
+﻿using System.Runtime.CompilerServices;
 
 namespace Demo;
 
@@ -17,28 +6,27 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddDemo(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration["ConnectionString"];
+        var tenantConnectionString = configuration["TenantConnectionString"];
+        var adminConnectionString = configuration["AdminConnectionString"];
 
         var assembly = Assembly.GetExecutingAssembly();
 
         services.AddMediatR(assembly);
         services.AddValidatorsFromAssembly(assembly);
 
+        services.AddScoped<ITenantContext, TenantContext>();
+        services.AddScoped<IRepository, Repository>();
         services.AddScoped<ICarRepository, CarRepository>();
-        services.AddScoped<IPersonRepository, PersonRepository>();
-        services.AddScoped<IDbConnection>(c => new NpgsqlConnection(connectionString));
+        services.AddScoped<IDbConnection>(c => new NpgsqlConnection(tenantConnectionString));
 
         services
             .AddFluentMigratorCore()
             .ConfigureRunner(runner => runner
                 .AddPostgres()
-                .WithGlobalConnectionString(connectionString)
+                .WithGlobalConnectionString(adminConnectionString)
                 .ScanIn(Assembly.GetExecutingAssembly()).For.Migrations());
         services
             .AddScoped<MigrationExecutor>();
-
-        services
-            .AddSingleton<IJsonSerializer, JsonSerializer>();
 
         return services;
     }

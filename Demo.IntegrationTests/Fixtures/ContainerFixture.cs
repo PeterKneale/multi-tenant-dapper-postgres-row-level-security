@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Demo.Infrastructure.Database;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Demo.Infrastructure.Repositories;
 
 namespace Demo.IntegrationTests.Fixtures;
 
@@ -15,11 +11,15 @@ public class ContainerFixture : IDisposable
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string>
             {
-                {"ConnectionString", "Host=localhost;Database=postgres;Username=postgres;Password=password"}
+                // Used by the tenants when using the app
+                {"TenantConnectionString", "Host=localhost;Database=postgres;Username=tenant;Password=password"},
+                // Used by the app when provisioning
+                {"AdminConnectionString", "Host=localhost;Database=postgres;Username=postgres;Password=password"}
             })
             .Build();
         var services = new ServiceCollection();
         services.AddDemo(configuration);
+        services.AddScoped<ITenantContext, TestTenantContext>();
         _provider = services.BuildServiceProvider();
 
         using var scope = _provider.CreateScope();

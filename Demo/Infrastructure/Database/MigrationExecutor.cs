@@ -1,5 +1,3 @@
-using FluentMigrator.Runner;
-
 namespace Demo.Infrastructure.Database;
 
 public class MigrationExecutor

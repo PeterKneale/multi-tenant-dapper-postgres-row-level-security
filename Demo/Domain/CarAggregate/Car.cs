@@ -1,6 +1,4 @@
-﻿using Demo.Domain.PersonAggregate;
-
-namespace Demo.Domain.CarAggregate;
+﻿namespace Demo.Domain.CarAggregate;
 
 public class Car
 {
@@ -15,16 +13,9 @@ public class Car
     }
 
     // Private setter for serialisation
-    public CarId Id { get; private set; }
+    public CarId Id { get; private set; } = null!;
 
     public Registration? Registration { get; private set; }
-
-    public PersonId? Owner { get; private set; }
-
-    public void ChangeOwner(PersonId owner)
-    {
-        Owner = owner;
-    }
 
     public void Register(Registration registration)
     {
