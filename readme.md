@@ -2,12 +2,14 @@
 
 ## Create a table for use by multiple tenants
 
+```cs
 Create.Table("cars")
             .WithColumn("id").AsGuid().NotNullable().PrimaryKey()
-            .WithColumn("tenant").AsString().NotNullable()
+            .WithColumn("tenant").AsString().NotNullable() // This column indicates which tenant a row belongs to
             .WithColumn("registration").AsString().Nullable().Unique()
             .WithColumn("data").AsCustom("jsonb").NotNullable();
-            
+```   
+
 ## Configuring security policy on the table
 
 ```sql
