@@ -1,6 +1,14 @@
 # Demo of a multi-tenant application using Dapper and Postgres with Row level security
 
-## Configuring security policy
+## Create a table for use by multiple tenants
+
+Create.Table("cars")
+            .WithColumn("id").AsGuid().NotNullable().PrimaryKey()
+            .WithColumn("tenant").AsString().NotNullable()
+            .WithColumn("registration").AsString().Nullable().Unique()
+            .WithColumn("data").AsCustom("jsonb").NotNullable();
+            
+## Configuring security policy on the table
 
 ```sql
 // Create a separate account for tenants to login with
@@ -13,7 +21,7 @@ Execute.Sql($"GRANT SELECT, UPDATE, INSERT, DELETE ON {Table} TO {Username};");
 Execute.Sql($"ALTER TABLE {Table} ENABLE ROW LEVEL SECURITY;");
 
 // Define the policy that will be applied
-Execute.Sql($"CREATE POLICY {Policy} ON {Table} FOR ALL TO {Username} USING (current_setting('app.tenant')::VARCHAR);");
+Execute.Sql($"CREATE POLICY {Policy} ON {Table} FOR ALL TO {Username} USING (tenant = current_setting('app.tenant')::VARCHAR);");
 ```
 
 ## Interacting with security policy
